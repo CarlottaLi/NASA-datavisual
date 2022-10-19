@@ -2,7 +2,7 @@
 var req = new XMLHttpRequest();
 var url = "https://epic.gsfc.nasa.gov/api/natural/api_key=";
 var api_key = "gXR0BEk3bxoaGq2aAbIVseWtxqhMYWJUmXGOOVSU";
-var img_url = "https://epic.gsfc.nasa.gov/archive/natural/data/{$year}-{$month}-{$day}";
+var img_url = "https://epic.gsfc.nasa.gov/archive/natural/date/{$year}-{$month}-{$day}";
 var img_type = ".png";
 
 req.open("GET", url + api_key, true);
