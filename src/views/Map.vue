@@ -22,7 +22,7 @@ export default {
     return {
       fireballs: [],
       fireballYearRange: [],
-      loading: true;
+      loading: true,
     }
   },
   methods: {
