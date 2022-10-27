@@ -1,14 +1,30 @@
-import { fileURLToPath, URL } from 'node:url'
+//extend the vue-cli webpack config
+const PurgecssPlugin = require('purgecss-webpack-plugin')
+const glob = require('glob-all')
+const path = require('path')
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
-})
+module.exports = {
+  //relative publicPath on prod, Absolute for Dev
+  publicPath: process.env.NODE_ENV === 'production' ? '/fireball/' : '/',
+  //auto injection of SCSS vars into template <style> section
+  css: {
+    loaderOptions: {
+      sass: {
+        data: `@import "@/styles/variables.scss";`,
+      },
+    },
+  },
+  //provide purify with the scope of what to strip styles against
+  configureWebpack: {
+    //merged into the final Webpack config
+    plugins: [
+      new PurgecssPlugin({
+        paths: glob.sync([
+          path.join(__dirname, './src/index.html'),
+          path.join(__dirname, './**/*.vue'),
+          path.join(__dirname, './src/**/*.js'),
+        ]),
+      }),
+    ],
+  },
+}
