@@ -1,7 +1,7 @@
 <template>
-  <div class="drawer" : class="{ 'is-open': showDrawer }" data-test="drawer">
+  <div class="drawer" :class="{ 'is-open': showDrawer }" data-test="drawer">
     <span class="drawer-toggler p-md" @click="showDrawer = !showDrawer" data-test="drawer-toggler">
-      <base-icon : icon="showDrawer ? 'info' : 'info_outline'" />
+      <base-icon :icon="showDrawer ? 'info' : 'info_outline'" />
     </span>
     <div class="drawer-content has-background-black-ter has-text-white is-size-7 p-lg">
       <div class="content">
@@ -17,7 +17,7 @@
             <a @click="showModal = true" data-test="fireball-modal">Check out a Russian dashcam video of this event</a>
           </p>
           <portal to="modal">
-            <base-modal : show="showModal" @close="showModal = false">
+            <base-modal :show="showModal" @close="showModal = false">
               <div class="image is-16by9">
                 <iframe id="ytplayer" type="text/html" width="1024" height="576" class="has-ratio"
                   src="https://www.youtube.com/embed/dpmXyJrs7iU?color=white" frameborder="0" allowfullscreen></iframe>
@@ -40,7 +40,7 @@
           <li v-for="metric in metrics" :key="metric.id" :class="{ 'is-active': metricToPlot === metric.id }"
             @click="setMetricToPlot(metric.id)" :data-test="`metricToggle-${metric.id}`">
             <a class="has-text-white">
-              <base-icon : icon="metric.icon" />
+              <base-icon :icon="metric.icon" />
               <span>{{ metric.label }}</span>
             </a>
           </li>
