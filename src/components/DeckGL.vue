@@ -2,7 +2,7 @@
   <div>
     <div class="deck-wrapper">
       <div v-if="loading" class="fill-wrapper spinner-wrapper">
-        <base-spinner : options="spinnerOptions" />
+        <base-spinner :options="spinnerOptions" />
       </div>
       <fireball-drawer :fireballYearRange="fireballYearRange" :fireballs="fireballs" :metrics="metrics"
         :metricToPlot="metricToPlot" :scales="scales" :scaleToPlot="scaleToPlot" @metric-updated="onMetricUpdated"
@@ -10,7 +10,7 @@
       <div id="map" class="fill-wrapper"></div>
       <canvas id="deck-canvas" class="fill-wrapper"></canvas>
     </div>
-    <fireball-tooltip : fireball="fireballHovered" />
+    <fireball-tooltip :fireball="fireballHovered" />
   </div>
 </template>
 
@@ -149,7 +149,7 @@ export default {
               getRadius: 200,
             },
             updateTriggers: {
-              getRadius: [this.metricToPlot, this.scaleToPlot].
+              getRadius: [this.metricToPlot, this.scaleToPlot],
                 getFillColor: [this.metricToPlot, this.scaleToPlot],
             },
           }),
