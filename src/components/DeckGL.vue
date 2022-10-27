@@ -1,0 +1,221 @@
+<template>
+  <div>
+    <div class="deck-wrapper">
+      <div v-if="loading" class="fill-wrapper spinner-wrapper">
+        <base-spinner : options="spinnerOptions" />
+      </div>
+      <fireball-drawer :fireballYearRange="fireballYearRange" :fireballs="fireballs" :metrics="metrics"
+        :metricToPlot="metricToPlot" :scales="scales" :scaleToPlot="scaleToPlot" @metric-updated="onMetricUpdated"
+        @scale-updated="onScaleUpdated" />
+      <div id="map" class="fill-wrapper"></div>
+      <canvas id="deck-canvas" class="fill-wrapper"></canvas>
+    </div>
+    <fireball-tooltip : fireball="fireballHovered" />
+  </div>
+</template>
+
+<script>
+import { Deck } from '@deck.gl/core'
+import { ScatterplotLayer } from '@deck.gl/layers'
+import { Map as Mapbox } from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import { scaleSequential } from 'd3-scale'
+import { interpolateRdPu } from 'd3-scale-chromatic'
+import { rgbStringToArray } from '@/helpers/utils.js'
+import { getFireballMetricRange } from '@/services/FireballService'
+import FireballTooltip from '@/components/FireballTooltip'
+import FireballDrawer from '@/components/FireballDrawer'
+
+//init Map and Deck container objects to be referenced across methods
+let mapObject = null
+let deckObject = null
+
+export default {
+  components: {
+    FireballTooltip,
+    FireballDrawer,
+  },
+  props: {
+    fireballs: Array,
+    fireballYearRange: Array,
+    loading: Boolean,
+  },
+  data() {
+    return {
+      colorScale: null,
+      fireballHovered: false,
+      metricToPlot: 'energy',
+      metrics: [
+        {
+          id: 'energy',
+          icon: 'brightness_5',
+          label: 'Radiated',
+        },
+        {
+          id: 'impact-e',
+          icon: 'whatshot',
+          label: 'Impact',
+        },
+      ],
+      scaleToPlot: 'log',
+      scales: [
+        {
+          id: 'log',
+          label: 'Logarithmic',
+        },
+        {
+          id: 'linear',
+          label: 'Linear',
+        },
+      ],
+      spinnerOptions: {
+        size: 100,
+        color: '#333',
+        depth: 5,
+      },
+    }
+  },
+  watch: {
+    fireballs() {
+      //watch for changes to fireballs prop populated by parent
+      this.updateChart()
+    },
+    metricToPlot() {
+      this.updateChart()
+    },
+    scaleToPlot() {
+      this.updateChart()
+    },
+  },
+  methods: {
+    initDeckGL() {
+      const INITIAL_VIEW_STATE = {
+        latitude: 0,
+        longitude: 0,
+        zoom: 2,
+        bearing: 0,
+        pitch: 0,
+      }
+      // set mapbox token
+      const mapTilerMapStyle = 'darkmatter' //darkmatter || positron
+      const mapTilerKey = 'tDYfHrTJOrps6ZOF6nXx' //public API key
+
+      mapObject = new Mapbox({
+        container: 'map',
+        style: `https://api.maptiler.com/maps/${mapTilerMapStyle}/style.json?key=${mapTilerKey}`,
+        //note: deck.gl will be in charge of interaction and event handling
+        interactive: false,
+        center: [INITIAL_VIEW_STATE.longitude, INITIAL_VIEW_STATE.latitude],
+        zoom: INITIAL_VIEW_STATE.zoom,
+        bearing: INITIAL_VIEW_STATE.bearing,
+        pitch: INITIAL_VIEW_STATE.pitch,
+      })
+
+      deckObject = new Deck({
+        canvas: 'deck-canvas',
+        width: '100%',
+        height: '100%',
+        initialViewState: INITIAL_VIEW_STATE,
+        controller: true,
+        onViewStateChange: ({ viewState }) => {
+          mapObject.jumpTo({
+            center: [viewState.longitude, viewState.latitude],
+            zoom: viewState.zoom,
+            bearing: viewState.bearing,
+            pitch: viewState.pitch,
+          })
+        },
+      })
+    },
+    updateDeckLayer() {
+      deckObject.setProps({
+        layers: [
+          new ScatterplotLayer({
+            data: this.fireballs,
+            pickable: true,
+            autoHighlight: true,
+            highlightColor: [35, 214, 187, 128],
+            opacity: 0.3,
+            radiusMinPixels: 2,
+            getPosition: (d) => [d.lon, d.lat],
+            getRadius: (d) => this.getMetricForScale(d),
+            getColor: (d) =>
+              rgbStringToArray(this.colorScale(Number(d[this.metricToPlot]))),
+            onHover: (hoveredObject) => {
+              this.fireballHovered = hoveredObject
+            },
+            transitions: {
+              getFillColor: 200,
+              getRadius: 200,
+            },
+            updateTriggers: {
+              getRadius: [this.metricToPlot, this.scaleToPlot].
+                getFillColor: [this.metricToPlot, this.scaleToPlot],
+            },
+          }),
+        ],
+      })
+    },
+    getMetricForScale(d) {
+      //set the radiusScale based on scale being used
+      let scaleMetricValue
+      let radiusScale
+      if (this.scaleToPlot === 'log') {
+        radiusScale = 50000
+        scaledMetricValue = Math.log(Number(d[this.metricToPlot]))
+      } else if (this.scaleToPlot === 'linear') {
+        radiusScale = 100
+        scaleMetricValue = Number(d[this.metricToPlot])
+      }
+      return scaledMetricValue * radiusScale
+    },
+    updateColorScale() {
+      const colorScale = interpolateRdPu
+      const metricDomain = getFireballMetricRange(
+        this.fireballs,
+        this.metricToPlot
+      )
+      this.colorScale = scaleSequential(colorScale).domain(metricDomain)
+    },
+    updateChart() {
+      this.updateColorScale()
+      this.updateDeckLayer()
+    },
+    onMetricUpdated(metric) {
+      this.metricToPlot = metric
+    },
+    onScaleUpdated(scale) {
+      this.scaleToPlot = scale
+    },
+  },
+  mounted() {
+    this.initDeckGL()
+    //whilst running from snapshot we have data at once
+    //no need to watch prop change
+    this.updateChart()
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+.deck-wrapper {
+  height: calc(100vh - #{$navbar-height});
+  position: relative;
+  background: #1b1b1d;
+}
+
+.fill-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.spinner-wrapper {
+  z-index: 3;
+  display: flex;
+  aligh-items: center;
+  justify-content: center;
+}
+</style>

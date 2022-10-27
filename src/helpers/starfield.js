@@ -1,0 +1,82 @@
+export default class Starfield {
+    constructor(config) {
+        this.canvas =
+            typeof config.canvas === 'string'
+                ? document.querySelector(config.canvas)
+                : config.canvas
+
+        this.ctx = this.canvas.getContext('2d')
+        this.style = getComputedStyle(this.canvas)
+
+        //import options or fallback to default
+        this.maxRadius = config.maxRadius || 40
+        const minInterval = config.minInterval || 1 //seconds
+        const maxInterval = config.maxInterval || 10 //seconds
+        this.shootingStarInterval = (Math.floor(Math.random() * maxInterval) + minInterval) * 1000
+        this.lastShootingStar = this.shootingStarInterval
+            ? performance.now()
+            : undefined
+
+        //set dimensions and watch for resize events to update canvas dimensions
+        this.onResize()
+        window.addEventListener('resize', this.onResize.bind(this))
+    }
+
+    star() {
+        return {
+            x: Math.round(Math.random() * this.canvas.width),
+            y: Math.round(Math.random() * this.canvas.height),
+            r: Math.random() * this.maxRadius,
+            l: 1,
+            dl: Math.round(Math.random()) === 1 ? 0.01 : -0.01,
+        }
+    }
+
+    onResize() {
+        this.canvas.width = this.style.width.replace('px', '')
+        this.canvas.height = this.style.height.replace('px', '')
+    }
+
+    draw(star) {
+        this.ctx.beginPath()
+        this.ctx.fillStyle = `rgba(255,255,255,${star.l})`
+        this.ctx.arc(star.x, star.y, star.r, 0, 2 * Math.PI, false)
+        //glow
+        this.ctx.shadowBlur = 5
+        this.ctx.shadowColor = 'blue'
+        this.ctx.shadowOffsetX = 0
+        this.ctx.shadowOffsetY = 0
+        this.ctx.fill()
+    }
+
+    start() {
+        const tick = (timeStamp) => {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+            if (this.shootingStar) {
+                const star = this.shootingStar
+
+                this.draw(star)
+
+                //animate shooting star with changes to coords, alpha and radius
+                star.y += 8
+                star.x += 20
+                star.l += star.dl
+                star.r -= 0.1
+
+                if (star.r <= 0) {
+                    this.shootingStar = undefined
+                } else if (this.shootingStarInterval) {
+                    if (timeStamp - this.lastShootingStar >= this.shootingStarInterval) {
+                        this.shootingStar = this.star()
+                        this.lastShootingStar = timeStamp
+                    }
+                }
+
+                this.frameId = window.requestAnimationFrame(tick)
+            }
+
+            this.frameId = window.requestAnimationFrame(tick)
+        }
+    }
+}

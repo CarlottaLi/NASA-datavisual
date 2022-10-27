@@ -1,0 +1,16 @@
+$primary: #e761af;
+
+$link: $primary !default;
+$link-hover: darken($primary, 10%);
+$link-focus-border: $primary !default;
+
+//navbar styling
+$navbar-item-hover-color: #fff;
+$navbar-item-hover-background-color: hsla(0, 0%, 100%, 0.1);
+$navbar-item-color: #fff;
+$navbar-item-active-color: #fff;
+$navbar-background-color: transparent;
+$navbar-height: 4rem;
+
+//modals
+$modal-content-width: 800px;
