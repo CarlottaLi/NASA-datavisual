@@ -215,7 +215,7 @@ export default {
 .spinner-wrapper {
   z-index: 3;
   display: flex;
-  aligh-items: center;
+  align-items: center;
   justify-content: center;
 }
 </style>
