@@ -1,12 +1,24 @@
 {
   "name": "fireball",
   "version": "0.0.0",
+  "homepage": "https://CarlottaLi.github.io/NASA-datavisual",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deck.gl/core": "^8.8.15",
+    "@deck.gl/layers": "^8.8.15",
+    "bulma": "^0.9.4",
+    "bulma-scss": "^0.9.4",
+    "d3-scale": "^4.0.2",
+    "d3-scale-chromatic": "^3.0.0",
+    "date-fns": "^2.29.3",
+    "lodash": "^4.17.21",
+    "mapbox-gl": "^2.10.0",
+    "portal-vue": "^2.1.7",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
   },
